@@ -5,7 +5,7 @@ import {
   CPU_THINK_MS,
   createDeck,
   ENDING_BAND_MS,
-  ENDING_TEXT_MS,
+  ENDING_LOSE_MS,
   ESCAPE_DURATION_MS,
   FINAL_TURN_SECONDS,
   FLIP_REVEAL_MS,
@@ -30,14 +30,14 @@ function App() {
   const [isEscaping, setIsEscaping] = useState(false)
   const [turnKey, setTurnKey] = useState(0)
   const [cpuPulse, setCpuPulse] = useState(0)
-  const [endingStep, setEndingStep] = useState(0) // 0 band, 1 text, 2 again
+  const [endingStep, setEndingStep] = useState(0) // 0 band, 1 lose, 2 fair+buttons
   const [isPaused, setIsPaused] = useState(false)
   const [musicOn, setMusicOn] = useState(
     () => localStorage.getItem(BGM_STORAGE_KEY) !== 'off',
   )
   const [cpuTurnFxKey, setCpuTurnFxKey] = useState(0)
 
-  const bgm = useBgm(BGM_SRC)
+  const bgm = useBgm(BGM_SRC, 0.42, musicOn)
   const shellRef = useRef(null)
   const boardRef = useRef(null)
   const cardElsRef = useRef(new Map())
@@ -148,6 +148,8 @@ function App() {
   }, [clearTimer, triggerCpuTurnFx])
 
   const startGame = useCallback(() => {
+    bgm.unlock()
+    bgm.play()
     clearTimer()
     turnGenRef.current += 1
     busyRef.current = false
@@ -183,13 +185,21 @@ function App() {
       triggerCpuTurnFx()
       setCpuPulse((n) => n + 1)
     }
-    void bgm.play()
   }, [clearTimer, bgm, triggerCpuTurnFx])
 
-  const setMusicPreference = useCallback((on) => {
-    setMusicOn(on)
-    localStorage.setItem(BGM_STORAGE_KEY, on ? 'on' : 'off')
-  }, [])
+  const setMusicPreference = useCallback(
+    (on) => {
+      setMusicOn(on)
+      localStorage.setItem(BGM_STORAGE_KEY, on ? 'on' : 'off')
+      if (on) {
+        bgm.unlock()
+        bgm.play()
+      } else {
+        bgm.pause()
+      }
+    },
+    [bgm],
+  )
 
   const returnToTitle = useCallback(() => {
     clearTimer()
@@ -221,7 +231,7 @@ function App() {
         setEndingStep(2)
         busyRef.current = false
       },
-      ENDING_BAND_MS + ENDING_TEXT_MS,
+      ENDING_BAND_MS + ENDING_LOSE_MS,
     )
   }, [clearTimer])
 
@@ -278,7 +288,8 @@ function App() {
         turnGenRef.current += 1
         bgm.pause()
       } else {
-        void bgm.play()
+        bgm.unlock()
+        bgm.play()
         if (isPlayerTurnRef.current) {
           setTurnKey((k) => k + 1)
         } else {
@@ -671,6 +682,7 @@ function App() {
               type="button"
               className={`music-pick-btn ${musicOn ? 'is-on' : ''}`}
               onClick={() => setMusicPreference(true)}
+              onPointerDown={() => bgm.unlock()}
               aria-pressed={musicOn}
             >
               ON
@@ -685,8 +697,13 @@ function App() {
             </button>
           </div>
         </div>
-        <button type="button" className="title-start" onClick={startGame}>
-          tap to start
+        <button
+          type="button"
+          className="title-start"
+          onPointerDown={() => bgm.unlock()}
+          onClick={startGame}
+        >
+          START
         </button>
       </div>
     )
@@ -845,10 +862,12 @@ function App() {
         >
           <div className="ending-band" />
           <div className="ending-copy">
-            <h1 className="ending-brand">
-              <span>FAIR</span>
-              <span>PLAY</span>
-            </h1>
+            {endingStep >= 1 && <p className="ending-lose">YOU LOSE</p>}
+            {endingStep >= 2 && (
+              <p className="ending-fair">
+                FAIR PLAY<span aria-hidden>♡</span>
+              </p>
+            )}
             {endingStep >= 2 && (
               <div className="overlay-actions overlay-actions--ending">
                 <button type="button" className="again-btn" onClick={startGame}>

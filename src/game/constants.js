@@ -23,7 +23,7 @@ export const RESERVE_CARD_COUNT = 4
 export const FLIP_REVEAL_MS = 780
 export const CPU_THINK_MS = 550
 export const ENDING_BAND_MS = 520
-export const ENDING_TEXT_MS = 280
+export const ENDING_LOSE_MS = 720
 export const ESCAPE_DURATION_MS = 170
 
 export const BGM_SRC = '/audio/bgm.mp3'
