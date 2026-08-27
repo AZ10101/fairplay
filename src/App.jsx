@@ -710,7 +710,7 @@ function App() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Null
+              NullΦ
             </a>
           </span>
         </footer>
