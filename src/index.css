@@ -1,0 +1,61 @@
+:root {
+  --felt: #1b6b45;
+  --felt-deep: #145536;
+  --felt-edge: #0e3d26;
+  --card-back: #1e4f9c;
+  --card-back-light: #2a63bd;
+  --card-face: #fffcf5;
+  --card-edge: rgba(0, 0, 0, 0.18);
+  --text: #f4fff8;
+  --text-ink: #1a1a1a;
+  --text-dim: rgba(244, 255, 248, 0.72);
+  --hud: rgba(0, 0, 0, 0.22);
+  --timer: #ffd45a;
+  --danger: #ff5a5a;
+  --font-body: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --flip-ms: 320ms;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  min-height: 100svh;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 35%, #228554 0%, var(--felt) 55%, var(--felt-deep) 100%);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#root {
+  min-height: 100svh;
+  min-height: 100dvh;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
