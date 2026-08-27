@@ -63,10 +63,6 @@ function App() {
   flippedIdsRef.current = flippedIds
   isPausedRef.current = isPaused
 
-  useEffect(() => {
-    bgm.setEnabled(musicOn)
-  }, [musicOn, bgm])
-
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current)
