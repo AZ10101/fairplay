@@ -23,6 +23,34 @@
   gap: 28px;
 }
 
+.title-credit {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(14px + var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: rgba(244, 255, 248, 0.45);
+  pointer-events: none;
+}
+
+.title-credit a {
+  pointer-events: auto;
+  color: rgba(244, 255, 248, 0.72);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.title-credit a:hover,
+.title-credit a:focus-visible {
+  color: #fff;
+}
+
 .title-brand {
   margin: 0;
   font-weight: 700;

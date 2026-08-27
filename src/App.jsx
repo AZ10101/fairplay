@@ -701,6 +701,19 @@ function App() {
         >
           START
         </button>
+        <footer className="title-credit">
+          <span>V.1.0.0</span>
+          <span>
+            Made by{' '}
+            <a
+              href="https://midnight-app-bar.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Null
+            </a>
+          </span>
+        </footer>
       </div>
     )
   }
