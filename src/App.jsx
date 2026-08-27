@@ -869,7 +869,7 @@ function App() {
                 <button type="button" className="again-btn" onClick={startGame}>
                   PLAY AGAIN?
                 </button>
-                <button type="button" className="top-btn top-btn--ending" onClick={returnToTitle}>
+                <button type="button" className="top-btn" onClick={returnToTitle}>
                   Return to top
                 </button>
               </div>

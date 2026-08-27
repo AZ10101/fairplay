@@ -299,6 +299,25 @@
   gap: 16px;
 }
 
+.overlay-actions--ending .again-btn,
+.overlay-actions--ending .top-btn {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-indent: 0.18em;
+  color: #777;
+  padding: 10px 8px;
+  border-bottom: none;
+}
+
+.overlay-actions--ending .again-btn:hover,
+.overlay-actions--ending .again-btn:focus-visible,
+.overlay-actions--ending .top-btn:hover,
+.overlay-actions--ending .top-btn:focus-visible {
+  color: #ddd;
+  border-bottom-color: transparent;
+}
+
 .top-btn {
   font-size: 0.72rem;
   font-weight: 700;
@@ -313,16 +332,6 @@
 .top-btn:focus-visible {
   color: #fff;
   border-bottom-color: rgba(255, 255, 255, 0.35);
-}
-
-.top-btn--ending {
-  color: #777;
-}
-
-.top-btn--ending:hover,
-.top-btn--ending:focus-visible {
-  color: #ddd;
-  border-bottom-color: rgba(255, 255, 255, 0.2);
 }
 
 .turn-banner {
