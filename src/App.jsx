@@ -39,6 +39,7 @@ function App() {
 
   const bgm = useBgm(BGM_SRC, 0.42, musicOn)
   const shellRef = useRef(null)
+  const pauseBtnRef = useRef(null)
   const boardRef = useRef(null)
   const cardElsRef = useRef(new Map())
   const memoryRef = useRef(new Map())
@@ -357,6 +358,7 @@ function App() {
       w,
       h,
     )
+    const forbidden = getPauseForbiddenZone(pauseBtnRef.current)
 
     const curLeft = anchorLeft + prevX
     const curTop = anchorTop + prevY
@@ -374,55 +376,79 @@ function App() {
     const midY = (boundMinTop + boundMaxTop + h) * 0.5
     const preferLeft = curLeft + w * 0.5 > midX
     const preferTop = curTop + h * 0.5 > midY
-    const roll = Math.random()
-
-    let targetLeft
-    let targetTop
     const spanX = boundMaxLeft - boundMinLeft
     const spanY = boundMaxTop - boundMinTop
 
-    if (roll < 0.34) {
-      targetLeft = preferLeft
-        ? boundMinLeft + Math.random() * Math.min(40, spanX)
-        : boundMaxLeft - Math.random() * Math.min(40, spanX)
-      targetTop = clamp(
-        curTop + (Math.random() - 0.5) * spanY * 0.65,
-        boundMinTop,
-        boundMaxTop,
-      )
-    } else if (roll < 0.67) {
-      targetTop = preferTop
-        ? boundMinTop + Math.random() * Math.min(40, spanY)
-        : boundMaxTop - Math.random() * Math.min(40, spanY)
-      targetLeft = clamp(
-        curLeft + (Math.random() - 0.5) * spanX * 0.65,
+    const pickCandidate = () => {
+      const roll = Math.random()
+      let targetLeft
+      let targetTop
+
+      if (roll < 0.34) {
+        targetLeft = preferLeft
+          ? boundMinLeft + Math.random() * Math.min(40, spanX)
+          : boundMaxLeft - Math.random() * Math.min(40, spanX)
+        targetTop = clamp(
+          curTop + (Math.random() - 0.5) * spanY * 0.65,
+          boundMinTop,
+          boundMaxTop,
+        )
+      } else if (roll < 0.67) {
+        targetTop = preferTop
+          ? boundMinTop + Math.random() * Math.min(40, spanY)
+          : boundMaxTop - Math.random() * Math.min(40, spanY)
+        targetLeft = clamp(
+          curLeft + (Math.random() - 0.5) * spanX * 0.65,
+          boundMinLeft,
+          boundMaxLeft,
+        )
+      } else {
+        targetLeft = preferLeft
+          ? boundMinLeft + Math.random() * spanX * 0.3
+          : boundMaxLeft - Math.random() * spanX * 0.3
+        targetTop = preferTop
+          ? boundMinTop + Math.random() * spanY * 0.3
+          : boundMaxTop - Math.random() * spanY * 0.3
+        targetLeft = clamp(targetLeft, boundMinLeft, boundMaxLeft)
+        targetTop = clamp(targetTop, boundMinTop, boundMaxTop)
+      }
+
+      if (Math.hypot(targetLeft - curLeft, targetTop - curTop) < 48) {
+        targetLeft = preferLeft ? boundMinLeft : boundMaxLeft
+        targetTop = preferTop ? boundMinTop : boundMaxTop
+      }
+
+      let x = targetLeft - anchorLeft
+      let y = targetTop - anchorTop
+      const finalLeft = clamp(anchorLeft + x, boundMinLeft, boundMaxLeft)
+      const finalTop = clamp(anchorTop + y, boundMinTop, boundMaxTop)
+      return { left: finalLeft, top: finalTop }
+    }
+
+    let chosen = pickCandidate()
+    for (let i = 0; i < 10; i += 1) {
+      if (!overlapsRect(chosen.left, chosen.top, w, h, forbidden)) break
+      chosen = pickCandidate()
+    }
+
+    // Last resort: stay clear of pause by favoring bottom-left away from the button
+    if (overlapsRect(chosen.left, chosen.top, w, h, forbidden)) {
+      const safe = findSafeFleeSpot(
         boundMinLeft,
+        boundMinTop,
         boundMaxLeft,
+        boundMaxTop,
+        w,
+        h,
+        forbidden,
+        preferLeft,
+        preferTop,
       )
-    } else {
-      targetLeft = preferLeft
-        ? boundMinLeft + Math.random() * spanX * 0.3
-        : boundMaxLeft - Math.random() * spanX * 0.3
-      targetTop = preferTop
-        ? boundMinTop + Math.random() * spanY * 0.3
-        : boundMaxTop - Math.random() * spanY * 0.3
-      targetLeft = clamp(targetLeft, boundMinLeft, boundMaxLeft)
-      targetTop = clamp(targetTop, boundMinTop, boundMaxTop)
+      if (safe) chosen = safe
     }
 
-    if (Math.hypot(targetLeft - curLeft, targetTop - curTop) < 48) {
-      targetLeft = preferLeft ? boundMinLeft : boundMaxLeft
-      targetTop = preferTop ? boundMinTop : boundMaxTop
-    }
-
-    let x = targetLeft - anchorLeft
-    let y = targetTop - anchorTop
-
-    const finalLeft = clamp(anchorLeft + x, boundMinLeft, boundMaxLeft)
-    const finalTop = clamp(anchorTop + y, boundMinTop, boundMaxTop)
-    x = finalLeft - anchorLeft
-    y = finalTop - anchorTop
-
+    const x = chosen.left - anchorLeft
+    const y = chosen.top - anchorTop
     const r = (Math.random() - 0.5) * 28
     return { x, y, r, fleeAnchorX: anchorLeft, fleeAnchorY: anchorTop }
   }, [])
@@ -740,6 +766,7 @@ function App() {
         <button
           type="button"
           className="pause-btn"
+          ref={pauseBtnRef}
           onClick={togglePause}
           aria-label={isPaused ? '再開' : '一時停止'}
         >
@@ -896,6 +923,61 @@ function App() {
 
 function clamp(n, min, max) {
   return Math.min(max, Math.max(min, n))
+}
+
+/** Expanded hit zone around the pause button — fleeing cards must stay out */
+function getPauseForbiddenZone(pauseEl, pad = 18) {
+  if (!pauseEl) return null
+  const r = pauseEl.getBoundingClientRect()
+  return {
+    left: r.left - pad,
+    top: r.top - pad,
+    right: r.right + pad,
+    bottom: r.bottom + pad,
+  }
+}
+
+function overlapsRect(left, top, w, h, zone) {
+  if (!zone) return false
+  return !(
+    left + w <= zone.left ||
+    left >= zone.right ||
+    top + h <= zone.top ||
+    top >= zone.bottom
+  )
+}
+
+function findSafeFleeSpot(
+  minLeft,
+  minTop,
+  maxLeft,
+  maxTop,
+  w,
+  h,
+  forbidden,
+  preferLeft,
+  preferTop,
+) {
+  const candidates = [
+    { left: preferLeft ? minLeft : maxLeft, top: preferTop ? minTop : maxTop },
+    { left: minLeft, top: maxTop },
+    { left: maxLeft, top: maxTop },
+    { left: minLeft, top: minTop },
+    { left: maxLeft, top: minTop },
+    {
+      left: (minLeft + maxLeft) * 0.5,
+      top: maxTop,
+    },
+  ]
+
+  for (const spot of candidates) {
+    const left = clamp(spot.left, minLeft, maxLeft)
+    const top = clamp(spot.top, minTop, maxTop)
+    if (!overlapsRect(left, top, w, h, forbidden)) {
+      return { left, top }
+    }
+  }
+  return null
 }
 
 /** Keep the whole card inside the visible play area (viewport ∩ game shell) */
